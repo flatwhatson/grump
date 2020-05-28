@@ -49,8 +49,8 @@ usage: " (car argv) " [options] [input] [output]
 options:
   -h, --help       Display this help
 
-Parse the output of \"tcpflow -D\" from input (default stdin) and write the
-parsed s-exp to output (default stdout).
+Parse the output of \"tcpflow -D\" from input (default stdin) and
+write the parsed s-exp to output (default stdout).
 ")))
 
 (define (main argv)
