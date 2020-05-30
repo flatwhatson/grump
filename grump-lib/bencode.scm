@@ -45,20 +45,8 @@
           (if (<= end len)
               (list end (list 'b-string (substring str pos end)))
               (begin
-                (warn! "ERROR: can't read ~a bytes from position ~a in string of length ~a~%" num pos len)
+                (warn! "ERROR: can't read ~a bytes from position ~a in string of length ~a" num pos len)
                 #f)))))
-
-    (define (wrap name proc)
-      (lambda (str len pos)
-        (let ((result (proc str len pos)))
-          (debug! "~a: ~s~%" name result)
-          result)))
-
-    (set! b-length  (wrap "b-length"  b-length))
-    (set! b-string  (wrap "b-string"  b-string))
-    (set! b-integer (wrap "b-integer" b-integer))
-    (set! b-list    (wrap "b-list"    b-list))
-    (set! b-dict    (wrap "b-dict"    b-dict))
 
     (lambda (input)
       (peg:tree (match-pattern b-value input)))))
