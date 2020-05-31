@@ -1,9 +1,9 @@
-#!/usr/bin/env -S guile -e main -L . -s
+#!/usr/bin/env -S guile -e main -s
 !#
-(use-modules (ice-9 binary-ports)
-             (ice-9 getopt-long)
-             (ice-9 iconv)
+(add-to-load-path (dirname (current-filename)))
+(use-modules (ice-9 getopt-long)
              (ice-9 pretty-print)
+             (ice-9 textual-ports)
              (grump-lib bencode)
              (grump-lib utils))
 
@@ -41,12 +41,10 @@ s-exp to output (default stdout).
                  (output-port (if (equal? output-file "-")
                                   (current-output-port)
                                   (open-output-file output-file)))
-                 (input-bytes
-                  (time! "Read input bytes"
-                         (get-bytevector-all input-port)))
                  (input-text
-                  (time! "Convert to string"
-                         (bytevector->string input-bytes "ISO-8859-1")))
+                  (time! "Read input bytes"
+                         (set-port-encoding! input-port "ISO-8859-1")
+                         (get-string-all input-port)))
                  (parsed-data
                   (time! "Parse bencoded data"
                          (parse-bencode input-text))))
