@@ -3,50 +3,44 @@
   #:use-module (ice-9 peg)
   #:use-module (srfi srfi-2))
 
-(define-public parse-bencode
-  (let ()
-    (define-peg-string-patterns
-      "ignore-colon < ':'
-       ignore-i     < 'i'
-       ignore-l     < 'l'
-       ignore-d     < 'd'
-       ignore-e     < 'e'
+(define-peg-string-patterns
+  "ignore-colon < ':'
+   ignore-i     < 'i'
+   ignore-l     < 'l'
+   ignore-d     < 'd'
+   ignore-e     < 'e'
 
-       b-length-raw  <- [0-9]+ ignore-colon
-       b-integer-raw <- ignore-i [0-9]+ ignore-e
+   b-integer-raw       <- ignore-i [0-9]+ ignore-e
+   b-string-length-raw <- [0-9]+ ignore-colon
 
-       b-list  <-- ignore-l b-value* ignore-e
-       b-dict  <-- ignore-d (b-string b-value)* ignore-e
-       b-value <-  b-integer / b-list / b-dict / b-string ")
+   b-list <-- ignore-l b-value* ignore-e
+   b-dict <-- ignore-d (b-string b-value)* ignore-e
 
-    (define (flatten-string elems)
-      (if (list? elems)
-          (apply string-append (map flatten-string elems))
-          elems))
+   b-value <- b-integer / b-string / b-list / b-dict ")
 
-    (define (flatten-number elems)
-      (string->number (flatten-string elems)))
+(define (match->number val)
+  (string->number
+   (if (list? (car val))
+       (apply string-append (car val))
+       (car val))))
 
-    (define (b-integer str len pos)
-      (and-let* ((match (b-integer-raw str len pos)))
-        (list (car match)
-              (list 'b-integer (flatten-number (cdr match))))))
+(define (b-integer str len pos)
+  (and-let* ((match (b-integer-raw str len pos)))
+    (let ((pos (car match))
+          (num (match->number (cdr match))))
+      (list pos `(b-integer ,num)))))
 
-    (define (b-length str len pos)
-      (and-let* ((match (b-length-raw str len pos)))
-        (list (car match)
-              (flatten-number (cdr match)))))
+(define (b-string str len pos)
+  (and-let* ((match (b-string-length-raw str len pos)))
+    (let* ((pos (car match))
+           (num (match->number (cdr match)))
+           (end (+ pos num)))
+      (if (<= end len)
+          (list end `(b-string ,(substring str pos end)))
+          (begin
+            (warn! "ERROR: can't read ~a bytes from position ~a in string of length ~a"
+                   num pos len)
+            #f)))))
 
-    (define (b-string str len pos)
-      (and-let* ((match (b-length str len pos)))
-        (let* ((num (cadr match))
-               (pos (car match))
-               (end (+ pos num)))
-          (if (<= end len)
-              (list end (list 'b-string (substring str pos end)))
-              (begin
-                (warn! "ERROR: can't read ~a bytes from position ~a in string of length ~a" num pos len)
-                #f)))))
-
-    (lambda (input)
-      (peg:tree (match-pattern b-value input)))))
+(define-public (parse-bencode input)
+  (peg:tree (match-pattern b-value input)))
