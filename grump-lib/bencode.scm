@@ -3,20 +3,20 @@
   #:use-module (ice-9 peg)
   #:use-module (srfi srfi-2))
 
-(define-peg-string-patterns
-  "ignore-colon < ':'
-   ignore-i     < 'i'
-   ignore-l     < 'l'
-   ignore-d     < 'd'
-   ignore-e     < 'e'
+(define-peg-pattern b-integer-raw body
+  (and (ignore "i") (+ (range #\0 #\9)) (ignore "e")))
 
-   b-integer-raw       <- ignore-i [0-9]+ ignore-e
-   b-string-length-raw <- [0-9]+ ignore-colon
+(define-peg-pattern b-string-length-raw body
+  (and (+ (range #\0 #\9)) (ignore ":")))
 
-   b-list <-- ignore-l b-value* ignore-e
-   b-dict <-- ignore-d (b-string b-value)* ignore-e
+(define-peg-pattern b-list all
+  (and (ignore "l") (* b-value) (ignore "e")))
 
-   b-value <- b-integer / b-string / b-list / b-dict ")
+(define-peg-pattern b-dict all
+  (and (ignore "d") (* (and b-string b-value)) (ignore "e")))
+
+(define-peg-pattern b-value body
+  (or b-integer b-string b-list b-dict))
 
 (define (match->number val)
   (string->number
