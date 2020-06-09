@@ -20,20 +20,20 @@
 
 (define (match->number val)
   (string->number
-   (if (list? (car val))
-       (apply string-append (car val))
-       (car val))))
+   (if (list? val)
+       (apply string-append val)
+       val)))
 
 (define (b-integer str len pos)
   (and-let* ((match (b-integer-raw str len pos)))
     (let ((pos (car match))
-          (num (match->number (cdr match))))
+          (num (match->number (cadr match))))
       (list pos `(b-integer ,num)))))
 
 (define (b-string str len pos)
   (and-let* ((match (b-string-length-raw str len pos)))
     (let* ((pos (car match))
-           (num (match->number (cdr match)))
+           (num (match->number (cadr match)))
            (end (+ pos num)))
       (if (<= end len)
           (list end `(b-string ,(substring str pos end)))
