@@ -31,17 +31,21 @@ write the parsed s-exp to output (default stdout).
          (output-file     (if (> extra-arg-count 1) (cadr extra-args) "-")))
     (if help-wanted
         (print-help args)
-        (let* ((input-port (if (equal? input-file "-")
-                               (current-input-port)
-                               (open-input-file input-file)))
-               (output-port (if (equal? output-file "-")
-                                (current-output-port)
-                                (open-output-file output-file)))
-               (input-text
-                (time! "Read input text"
-                       (get-string-all input-port)))
-               (parsed-data
-                (time! "Parse tcpflow data"
-                       (parse-tcpflow input-text))))
-          (time! "Pretty-print parsed data"
-                 (pretty-print parsed-data))))))
+        (begin
+          (when debug-wanted
+            (fluid-set! %grump-debug-enabled #t)
+            (fluid-set! %grump-debug-to-error #t))
+          (let* ((input-port (if (equal? input-file "-")
+                                 (current-input-port)
+                                 (open-input-file input-file)))
+                 (output-port (if (equal? output-file "-")
+                                  (current-output-port)
+                                  (open-output-file output-file)))
+                 (input-text
+                  (time! "Read input text"
+                         (get-string-all input-port)))
+                 (parsed-data
+                  (time! "Parse tcpflow data"
+                         (parse-tcpflow input-text))))
+            (time! "Pretty-print parsed data"
+                   (pretty-print parsed-data output-port)))))))
