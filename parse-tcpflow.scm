@@ -4,8 +4,8 @@
 (use-modules (ice-9 getopt-long)
              (ice-9 pretty-print)
              (ice-9 textual-ports)
-             (grump-lib tcpflow)
-             (grump-lib utils))
+             (grump tcpflow)
+             (grump utils))
 
 (define (print-help args)
   (display (string-append "\

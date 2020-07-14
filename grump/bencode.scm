@@ -1,5 +1,5 @@
-(define-module (grump-lib bencode)
-  #:use-module (grump-lib utils)
+(define-module (grump bencode)
+  #:use-module (grump utils)
   #:use-module (ice-9 peg)
   #:use-module (srfi srfi-2))
 

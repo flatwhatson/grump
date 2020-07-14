@@ -1,5 +1,5 @@
-(define-module (grump-lib tcpflow)
-  #:use-module (grump-lib utils)
+(define-module (grump tcpflow)
+  #:use-module (grump utils)
   #:use-module (ice-9 peg))
 
 (define-peg-string-patterns

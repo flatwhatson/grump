@@ -1,4 +1,4 @@
-(define-module (grump-lib utils)
+(define-module (grump utils)
   #:use-module (ice-9 format)
   #:export-syntax (print! warn! debug! time!))
 
