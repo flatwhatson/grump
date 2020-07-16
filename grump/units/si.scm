@@ -1,6 +1,7 @@
 (define-module (grump units si)
   #:use-module (grump units)
-  #:re-export (compatible?)
+  #:re-export (compatible?
+               convert-to)
   #:export (length                  length?                  m
             mass                    mass?                    kg
             time                    time?                    s
@@ -38,35 +39,62 @@
             equivalent-dose         equivalent-dose?         Sv
             catalytic-activity      catalytic-activity?      kat
 
-            Ym   Zm   Em   Pm   Tm   Gm   Mm   km   hm   dam   dm   cm   mm   μm   nm   pm   fm   am   zm   ym
-            Ys   Zs   Es   Ps   Ts   Gs   Ms   ks   hs   das   ds   cs   ms   μs   ns   ps   fs   as   zs   ys
-            YA   ZA   EA   PA   TA   GA   MA   kA   hA   daA   dA   cA   mA   μA   nA   pA   fA   aA   zA   yA
-            YK   ZK   EK   PK   TK   GK   MK   kK   hK   daK   dK   cK   mK   μK   nK   pK   fK   aK   zK   yK
-            Ycd  Zcd  Ecd  Pcd  Tcd  Gcd  Mcd  kcd  hcd  dacd  dcd  ccd  mcd  μcd  ncd  pcd  fcd  acd  zcd  ycd
-            Ymol Zmol Emol Pmol Tmol Gmol Mmol kmol hmol damol dmol cmol mmol μmol nmol pmol fmol amol zmol ymol
-            YHz  ZHz  EHz  PHz  THz  GHz  MHz  kHz  hHz  daHz  dHz  cHz  mHz  μHz  nHz  pHz  fHz  aHz  zHz  yHz
-            YN   ZN   EN   PN   TN   GN   MN   kN   hN   daN   dN   cN   mN   μN   nN   pN   fN   aN   zN   yN
-            YJ   ZJ   EJ   PJ   TJ   GJ   MJ   kJ   hJ   daJ   dJ   cJ   mJ   μJ   nJ   pJ   fJ   aJ   zJ   yJ
-            YW   ZW   EW   PW   TW   GW   MW   kW   hW   daW   dW   cW   mW   μW   nW   pW   fW   aW   zW   yW
-            YPa  ZPa  EPa  PPa  TPa  GPa  MPa  kPa  hPa  daPa  dPa  cPa  mPa  μPa  nPa  pPa  fPa  aPa  zPa  yPa
-            Yrad Zrad Erad Prad Trad Grad Mrad krad hrad darad drad crad mrad μrad nrad prad frad arad zrad yrad
-            Ysr  Zsr  Esr  Psr  Tsr  Gsr  Msr  ksr  hsr  dasr  dsr  csr  msr  μsr  nsr  psr  fsr  asr  zsr  ysr
-            YC   ZC   EC   PC   TC   GC   MC   kC   hC   daC   dC   cC   mC   μC   nC   pC   fC   aC   zC   yC
-            YV   ZV   EV   PV   TV   GV   MV   kV   hV   daV   dV   cV   mV   μV   nV   pV   fV   aV   zV   yV
-            YF   ZF   EF   PF   TF   GF   MF   kF   hF   daF   dF   cF   mF   μF   nF   pF   fF   aF   zF   yF
-            YΩ   ZΩ   EΩ   PΩ   TΩ   GΩ   MΩ   kΩ   hΩ   daΩ   dΩ   cΩ   mΩ   μΩ   nΩ   pΩ   fΩ   aΩ   zΩ   yΩ
-            YS   ZS   ES   PS   TS   GS   MS   kS   hS   daS   dS   cS   mS   μS   nS   pS   fS   aS   zS   yS
-            YWb  ZWb  EWb  PWb  TWb  GWb  MWb  kWb  hWb  daWb  dWb  cWb  mWb  μWb  nWb  pWb  fWb  aWb  zWb  yWb
-            YT   ZT   ET   PT   TT   GT   MT   kT   hT   daT   dT   cT   mT   μT   nT   pT   fT   aT   zT   yT
-            YH   ZH   EH   PH   TH   GH   MH   kH   hH   daH   dH   cH   mH   μH   nH   pH   fH   aH   zH   yH
-            Ylm  Zlm  Elm  Plm  Tlm  Glm  Mlm  klm  hlm  dalm  dlm  clm  mlm  μlm  nlm  plm  flm  alm  zlm  ylm
-            Ylx  Zlx  Elx  Plx  Tlx  Glx  Mlx  klx  hlx  dalx  dlx  clx  mlx  μlx  nlx  plx  flx  alx  zlx  ylx
-            YBq  ZBq  EBq  PBq  TBq  GBq  MBq  kBq  hBq  daBq  dBq  cBq  mBq  μBq  nBq  pBq  fBq  aBq  zBq  yBq
-            YGy  ZGy  EGy  PGy  TGy  GGy  MGy  kGy  hGy  daGy  dGy  cGy  mGy  μGy  nGy  pGy  fGy  aGy  zGy  yGy
-            YSv  ZSv  ESv  PSv  TSv  GSv  MSv  kSv  hSv  daSv  dSv  cSv  mSv  μSv  nSv  pSv  fSv  aSv  zSv  ySv
-            Ykat Zkat Ekat Pkat Tkat Gkat Mkat kkat hkat dakat dkat ckat mkat μkat nkat pkat fkat akat zkat ykat
+            Ym   Zm   Em   Pm   Tm   Gm   Mm   km   hm   dam
+            dm   cm   mm   μm   nm   pm   fm   am   zm   ym
+            Ys   Zs   Es   Ps   Ts   Gs   Ms   ks   hs   das
+            ds   cs   ms   μs   ns   ps   fs   as   zs   ys
+            YA   ZA   EA   PA   TA   GA   MA   kA   hA   daA
+            dA   cA   mA   μA   nA   pA   fA   aA   zA   yA
+            YK   ZK   EK   PK   TK   GK   MK   kK   hK   daK
+            dK   cK   mK   μK   nK   pK   fK   aK   zK   yK
+            Ycd  Zcd  Ecd  Pcd  Tcd  Gcd  Mcd  kcd  hcd  dacd
+            dcd  ccd  mcd  μcd  ncd  pcd  fcd  acd  zcd  ycd
+            Ymol Zmol Emol Pmol Tmol Gmol Mmol kmol hmol damol
+            dmol cmol mmol μmol nmol pmol fmol amol zmol ymol
+            YHz  ZHz  EHz  PHz  THz  GHz  MHz  kHz  hHz  daHz
+            dHz  cHz  mHz  μHz  nHz  pHz  fHz  aHz  zHz  yHz
+            YN   ZN   EN   PN   TN   GN   MN   kN   hN   daN
+            dN   cN   mN   μN   nN   pN   fN   aN   zN   yN
+            YJ   ZJ   EJ   PJ   TJ   GJ   MJ   kJ   hJ   daJ
+            dJ   cJ   mJ   μJ   nJ   pJ   fJ   aJ   zJ   yJ
+            YW   ZW   EW   PW   TW   GW   MW   kW   hW   daW
+            dW   cW   mW   μW   nW   pW   fW   aW   zW   yW
+            YPa  ZPa  EPa  PPa  TPa  GPa  MPa  kPa  hPa  daPa
+            dPa  cPa  mPa  μPa  nPa  pPa  fPa  aPa  zPa  yPa
+            Yrad Zrad Erad Prad Trad Grad Mrad krad hrad darad
+            drad crad mrad μrad nrad prad frad arad zrad yrad
+            Ysr  Zsr  Esr  Psr  Tsr  Gsr  Msr  ksr  hsr  dasr
+            dsr  csr  msr  μsr  nsr  psr  fsr  asr  zsr  ysr
+            YC   ZC   EC   PC   TC   GC   MC   kC   hC   daC
+            dC   cC   mC   μC   nC   pC   fC   aC   zC   yC
+            YV   ZV   EV   PV   TV   GV   MV   kV   hV   daV
+            dV   cV   mV   μV   nV   pV   fV   aV   zV   yV
+            YF   ZF   EF   PF   TF   GF   MF   kF   hF   daF
+            dF   cF   mF   μF   nF   pF   fF   aF   zF   yF
+            YΩ   ZΩ   EΩ   PΩ   TΩ   GΩ   MΩ   kΩ   hΩ   daΩ
+            dΩ   cΩ   mΩ   μΩ   nΩ   pΩ   fΩ   aΩ   zΩ   yΩ
+            YS   ZS   ES   PS   TS   GS   MS   kS   hS   daS
+            dS   cS   mS   μS   nS   pS   fS   aS   zS   yS
+            YWb  ZWb  EWb  PWb  TWb  GWb  MWb  kWb  hWb  daWb
+            dWb  cWb  mWb  μWb  nWb  pWb  fWb  aWb  zWb  yWb
+            YT   ZT   ET   PT   TT   GT   MT   kT   hT   daT
+            dT   cT   mT   μT   nT   pT   fT   aT   zT   yT
+            YH   ZH   EH   PH   TH   GH   MH   kH   hH   daH
+            dH   cH   mH   μH   nH   pH   fH   aH   zH   yH
+            Ylm  Zlm  Elm  Plm  Tlm  Glm  Mlm  klm  hlm  dalm
+            dlm  clm  mlm  μlm  nlm  plm  flm  alm  zlm  ylm
+            Ylx  Zlx  Elx  Plx  Tlx  Glx  Mlx  klx  hlx  dalx
+            dlx  clx  mlx  μlx  nlx  plx  flx  alx  zlx  ylx
+            YBq  ZBq  EBq  PBq  TBq  GBq  MBq  kBq  hBq  daBq
+            dBq  cBq  mBq  μBq  nBq  pBq  fBq  aBq  zBq  yBq
+            YGy  ZGy  EGy  PGy  TGy  GGy  MGy  kGy  hGy  daGy
+            dGy  cGy  mGy  μGy  nGy  pGy  fGy  aGy  zGy  yGy
+            YSv  ZSv  ESv  PSv  TSv  GSv  MSv  kSv  hSv  daSv
+            dSv  cSv  mSv  μSv  nSv  pSv  fSv  aSv  zSv  ySv
+            Ykat Zkat Ekat Pkat Tkat Gkat Mkat kkat hkat dakat
+            dkat ckat mkat μkat nkat pkat fkat akat zkat ykat
 
-            g l dl cl ml μl min h d deg ha t Å bar mbar atm a b eV meV μeV amu AU))
+            g L dL cL mL μL min h d deg ha t Å bar mbar atm a b eV meV μeV amu AU))
 
 (define-unit-system SI
   (length              meter     m)
@@ -137,12 +165,13 @@
 (define pi 3.14159265358979323846)
 
 (define-units
-  (g  gram       (/ kg 1000))
-  (l  liter      (* dm dm dm))
-  (dl deciliter  (/ l 10))
-  (cl centiliter (/ l 100))
-  (ml milliliter (/ l 1000))
-  (μl microliter (/ l 1000))
+  (g  gram       (* kg 1/1000))
+
+  (L  liter      (* dm dm dm))
+  (dL deciliter  (* L 1/10))
+  (cL centiliter (* L 1/100))
+  (mL milliliter (* L 1/1000))
+  (μL microliter (* L 1/1000))
 
   (min minute (* 60 s))
   (h   hour   (* 60 min))
@@ -155,7 +184,7 @@
 
   (bar  bar        (* 100000 Pa))
   (mbar millibar   (* 1/1000 bar))
-  (atm  atmosphere (* (/ 101325 100) mbar))
+  (atm  atmosphere (* 101325 Pa))
 
   (a are  (* 100 m m))
   (b barn (* 1/10000 pm pm))

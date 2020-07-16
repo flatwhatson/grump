@@ -2,7 +2,8 @@
   #:use-module (oop goops)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-71)
-  #:export (compatible?)
+  #:export (compatible?
+            convert-to)
   #:export-syntax (define-unit-system
                    define-dimension
                    define-dimensions
@@ -174,7 +175,7 @@
       (unit-system d)
       (map - (exponents d))))))
 
-(define (in-units-of new-unit quantity)
+(define (convert-to new-unit quantity)
   (let ((old-unit (unit quantity)))
     (if (eq? new-unit old-unit)
         quantity
@@ -235,7 +236,7 @@
 
 (define-method (+ (x <a-quantity>) (y <a-quantity>))
   (let* ((u (unit x))
-         (y (in-units-of u y)))
+         (y (convert-to u y)))
     (make-quantity (+ (magnitude x) (magnitude y)) u)))
 
 (define-method (+ x (y <a-quantity>))
@@ -246,7 +247,7 @@
 
 (define-method (- (x <a-quantity>) (y <a-quantity>))
   (let* ((u (unit x))
-         (y (in-units-of u y)))
+         (y (convert-to u y)))
     (make-quantity (- (magnitude x) (magnitude y)) u)))
 
 (define-method (- x (y <a-quantity>))
@@ -303,23 +304,19 @@
   (with-exponents (base-dimensions (unit-system d)) (exponents d)))
 
 (define (base-units-with-exponents d)
-  (with-exponents (base-unit-names (unit-system d)) (exponents d)))
-
-(define (base-unit-symbols-with-exponents d)
   (with-exponents (base-unit-symbols (unit-system d)) (exponents d)))
 
 (define-method (write (d <dimension>) p)
   (let* ((us (unit-system d))
          (is-base (member (name d) (base-dimensions us))))
     (display "#<dimension " p)
-    (display (name us) p)
-    (display #\: p)
-    (when (name d)
-      (display (name d) p)
-      (unless is-base
-        (display #\= p)))
-    (unless is-base
-      (display (base-dimensions-with-exponents d) p))
+    (if is-base
+        (display (name d) p)
+        (begin
+          (when (name d)
+            (display (name d) p)
+            (display #\= p))
+          (display (base-dimensions-with-exponents d) p)))
     (display #\> p)))
 
 (define-method (write (u <unit>) p)
@@ -327,23 +324,26 @@
          (us (unit-system d))
          (is-base (member (name u) (base-unit-names us))))
     (display "#<unit " p)
-    (display (name us) p)
-    (display #\: p)
-    (when (name d)
-      (display (name d) p)
-      (display #\: p))
-    (when (name u)
-      (display (name u) p)
-      (when (symbol u)
-        (display #\( p)
-        (display (symbol u) p)
-        (display #\) p))
-      (unless is-base
-        (display #\= p)))
-    (unless is-base
-      (display (factor u) p)
-      (display #\. p)
-      (display (base-unit-symbols-with-exponents d) p))
+    (if is-base
+        (begin
+          (display (name d) p)
+          (display #\space p)
+          (display (name u) p)
+          (display #\space p)
+          (display (symbol u) p))
+        (begin
+          (when (name d)
+            (display (name d) p)
+            (display #\space p))
+          (when (name u)
+            (display (name u) p)
+            (display #\space p))
+          (when (symbol u)
+            (display (symbol u) p)
+            (display #\= p))
+          (display (factor u) p)
+          (display #\. p)
+          (display (base-units-with-exponents d) p)))
     (display #\> p)))
 
 (define-method (write (x <quantity>) p)
@@ -352,17 +352,18 @@
     (display "#<" p)
     (display (or (name d) "quantity") p)
     (display #\space p)
-    (display (magnitude x) p)
-    (display #\space p)
     (cond ((symbol u)
+           (display (magnitude x) p)
+           (display #\space p)
            (display (symbol u) p))
           ((name u)
+           (display (magnitude x) p)
+           (display #\space p)
            (display (name u) p))
           (else
-           (unless (= (factor u) 1)
-             (display (factor u) p)
-             (display #\. p))
-           (display (base-unit-symbols-with-exponents d) p)))
+           (display (magnitude-in-base-units x) p)
+           (display #\space p)
+           (display (base-units-with-exponents d) p)))
     (display #\> p)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
