@@ -2,6 +2,7 @@
   #:use-module (oop goops)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-11)
+  #:use-module (srfi srfi-26)
   #:export (compatible?
             convert-to)
   #:export-syntax (define-unit-system
@@ -95,6 +96,9 @@
 (define (assert-same-unit-system d1 d2)
   (unless (eq? (unit-system d1) (unit-system d2))
     (error (format #f "Can't combine ~a and ~a" d1 d2))))
+
+(define (assert-same-unit-systems d . dims)
+  (for-each (cut assert-same-unit-system d <>) dims))
 
 (define (assert-compatible-dimension d1 d2)
   (unless (compatible? d1 d2)
@@ -203,9 +207,7 @@
 (define-method (expt (d <dimension>) n)
   (get-dimension
    (unit-system d)
-   (map (lambda (x)
-          (* x n))
-        (exponents d))))
+   (map (cut * n <>) (exponents d))))
 
 (define-method (sqrt (d <dimension>))
   (expt d 1/2))
@@ -457,8 +459,7 @@
             (map + exp1 exp2))
           '()
           (map (lambda (dim x)
-                 (map (lambda (e)
-                        (* x e))
+                 (map (cut * x <>)
                       (exponents dim)))
                dims exps)))
 
@@ -530,13 +531,14 @@
     (syntax-case x ()
       ((_ dim (dims-and-exps ...))
        (let-values (((dims exps) (deal2 #'(dims-and-exps ...))))
-         ;; TODO ensure unit-systems match
-         #`(define-dimension*
-             (unit-system #,(first dims))
-             dim
-             (combine-exponents
-              (list #,@dims)
-              (list #,@exps)))))
+         #`(begin
+             (assert-same-unit-systems #,@dims)
+             (define-dimension*
+               (unit-system #,(first dims))
+               dim
+               (combine-exponents
+                (list #,@dims)
+                (list #,@exps))))))
       ((_ dim unit sym (dims-and-exps ...))
        #`(begin
            (define-dimension dim (dims-and-exps ...))
