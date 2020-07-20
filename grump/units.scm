@@ -200,6 +200,81 @@
    (unit-system d1)
    (map - (exponents d1) (exponents d2))))
 
+(define-method (expt (d <dimension>) n)
+  (get-dimension
+   (unit-system d)
+   (map (lambda (x)
+          (* x n))
+        (exponents d))))
+
+(define-method (sqrt (d <dimension>))
+  (expt d 1/2))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-syntax-rule (define-unary-operator* op)
+  (define-method (op (x <a-quantity>))
+    (make-quantity (op (magnitude x)) (unit x))))
+
+(define-syntax-rule (define-commutative-operator* op)
+  (begin
+    (define-method (op (x <a-quantity>) y)
+      (make-quantity (op (magnitude x) y) (unit x)))
+    (define-method (op x (y <a-quantity>))
+      (make-quantity (op x (magnitude y)) (unit y)))))
+
+(define-syntax-rule (define-commutative-predicate* op)
+  (begin
+    (define-method (op (x <a-quantity>) y)
+      (op (magnitude x) y))
+    (define-method (op x (y <a-quantity>))
+      (op x (magnitude y)))))
+
+(define-syntax-rule (define-divide-operator* op)
+  (begin
+    (define-method (op (x <a-quantity>) (y <a-quantity>))
+      (let* ((ux (unit x))
+             (uy (unit y))
+             (d (/ (dimension ux) (dimension uy)))
+             (f (/ (factor    ux) (factor    uy)))
+             (v (op (magnitude x) (magnitude y))))
+        (if (every zero? (exponents d))
+            (* f v)
+            (make-quantity v (get-unit f d)))))
+
+    (define-method (op (x <a-quantity>) y)
+      (make-quantity (op (magnitude x) y) (unit x)))
+
+    (define-method (op x (y <a-quantity>))
+      (make-quantity (op x (magnitude y)) (invert-unit y)))))
+
+(define-syntax-rule (define-divmod-operator* op)
+  (begin
+    (define-method (op (x <a-quantity>) (y <a-quantity>))
+      (let*-values (((ux) (unit x))
+                    ((uy) (unit y))
+                    ((d) (/ (dimension ux) (dimension uy)))
+                    ((f) (/ (factor    ux) (factor    uy)))
+                    ((q r) (op (magnitude x) (magnitude y))))
+        (if (every zero? (exponents d))
+            (values (* f q)
+                    (* f r))
+            (let ((u (get-unit f d)))
+              (values (make-quantity q u)
+                      (make-quantity r u))))))
+
+    (define-method (op (x <a-quantity>) y)
+      (let-values (((u) (unit x))
+                   ((q r) (op (magnitude x) y)))
+        (values (make-quantity q u)
+                (make-quantity r u))))
+
+    (define-method (op x (y <a-quantity>))
+      (let-values (((u) (invert-unit y))
+                   ((q r) (op x (magnitude y))))
+        (values (make-quantity q u)
+                (make-quantity r u))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-method (* (x <a-quantity>) (y <a-quantity>))
@@ -212,79 +287,88 @@
         (* f v)
         (make-quantity v (get-unit f d)))))
 
-(define-method (* x (y <a-quantity>))
-  (make-quantity (* x (magnitude y)) (unit y)))
-
-(define-method (* (x <a-quantity>) y)
-  (make-quantity (* (magnitude x) y) (unit x)))
-
-(define-method (/ (x <a-quantity>) (y <a-quantity>))
-  (let* ((ux (unit x))
-         (uy (unit y))
-         (d (/ (dimension ux) (dimension uy)))
-         (f (/ (factor    ux) (factor    uy)))
-         (v (/ (magnitude  x) (magnitude  y))))
-    (if (every zero? (exponents d))
-        (* f v)
-        (make-quantity v (get-unit f d)))))
-
-(define-method (/ x (y <a-quantity>))
-  (make-quantity (/ x (magnitude y)) (invert-unit y)))
-
-(define-method (/ (x <a-quantity>) y)
-  (make-quantity (/ (magnitude x) y) (unit x)))
-
 (define-method (+ (x <a-quantity>) (y <a-quantity>))
   (let* ((u (unit x))
          (y (convert-to u y)))
     (make-quantity (+ (magnitude x) (magnitude y)) u)))
-
-(define-method (+ x (y <a-quantity>))
-  (make-quantity (+ x (magnitude y)) (unit y)))
-
-(define-method (+ (x <a-quantity>) y)
-  (make-quantity (+ (magnitude x) y) (unit x)))
 
 (define-method (- (x <a-quantity>) (y <a-quantity>))
   (let* ((u (unit x))
          (y (convert-to u y)))
     (make-quantity (- (magnitude x) (magnitude y)) u)))
 
-(define-method (- x (y <a-quantity>))
-  (make-quantity (- x (magnitude y)) (unit y)))
-
-(define-method (- (x <a-quantity>) y)
-  (make-quantity (- (magnitude x) y) (unit x)))
-
-(define-method (nan? (x <a-quantity>))
-  (nan? (magnitude x)))
+(define-commutative-operator* *)
+(define-commutative-operator* +)
+(define-commutative-operator* -)
+(define-divide-operator* /)
 
 (define-method (> (x <a-quantity>) (y <a-quantity>))
   (positive? (magnitude (- x y))))
 
-(define-method (> x (y <a-quantity>))
-  (> x (magnitude y)))
-
-(define-method (> (x <a-quantity>) y)
-  (> (magnitude x) y))
-
 (define-method (< (x <a-quantity>) (y <a-quantity>))
   (negative? (magnitude (- x y))))
-
-(define-method (< x (y <a-quantity>))
-  (< x (magnitude y)))
-
-(define-method (< (x <a-quantity>) y)
-  (< (magnitude x) y))
 
 (define-method (= (x <a-quantity>) (y <a-quantity>))
   (zero? (magnitude (- x y))))
 
-(define-method (= x (y <a-quantity>))
-  (= x (magnitude y)))
+(define-commutative-predicate* >)
+(define-commutative-predicate* <)
+(define-commutative-predicate* =)
 
-(define-method (= (x <a-quantity>) y)
-  (= (magnitude x) y))
+(define-method (nan? (x <a-quantity>))
+  (nan? (magnitude x)))
+
+(define-method (max x (y <a-quantity>))
+  (if (> x y) x y))
+
+(define-method (max (x <a-quantity>) y)
+  (if (> x y) x y))
+
+(define-method (min x (y <a-quantity>))
+  (if (< x y) x y))
+
+(define-method (min (x <a-quantity>) y)
+  (if (< x y) x y))
+
+(define-unary-operator* abs)
+(define-unary-operator* truncate)
+(define-unary-operator* round)
+(define-unary-operator* floor)
+(define-unary-operator* ceiling)
+
+(define-divmod-operator* floor/)
+(define-divide-operator* floor-quotient)
+(define-divide-operator* floor-remainder)
+
+(define-divmod-operator* ceiling/)
+(define-divide-operator* ceiling-quotient)
+(define-divide-operator* ceiling-remainder)
+
+(define-divmod-operator* truncate/)
+(define-divide-operator* truncate-quotient)
+(define-divide-operator* truncate-remainder)
+
+(define-divmod-operator* centered/)
+(define-divide-operator* centered-quotient)
+(define-divide-operator* centered-remainder)
+
+(define-divmod-operator* round/)
+(define-divide-operator* round-quotient)
+(define-divide-operator* round-remainder)
+
+(define-method (expt (x <a-quantity>) n)
+  (let* ((u (unit x))
+         (d (expt (dimension u) n))
+         (f (expt (factor    u) n))
+         (v (expt (magnitude x) n)))
+    (make-quantity v (get-unit f d))))
+
+(define-method (sqrt (x <a-quantity>))
+  (let* ((u (unit x))
+         (d (sqrt (dimension u)))
+         (f (sqrt (factor    u)))
+         (v (sqrt (magnitude x))))
+    (make-quantity v (get-unit f d))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -353,15 +437,15 @@
     (display (or (name d) "quantity") p)
     (display #\space p)
     (cond ((symbol u)
-           (display (magnitude x) p)
+           (display (exact->inexact (magnitude x)) p)
            (display #\space p)
            (display (symbol u) p))
           ((name u)
-           (display (magnitude x) p)
+           (display (exact->inexact (magnitude x)) p)
            (display #\space p)
            (display (name u) p))
           (else
-           (display (magnitude-in-base-units x) p)
+           (display (exact->inexact (magnitude-in-base-units x)) p)
            (display #\space p)
            (display (base-units-with-exponents d) p)))
     (display #\> p)))

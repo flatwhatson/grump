@@ -94,7 +94,7 @@
             Ykat Zkat Ekat Pkat Tkat Gkat Mkat kkat hkat dakat
             dkat ckat mkat μkat nkat pkat fkat akat zkat ykat
 
-            g L dL cL mL μL min h d deg ha t Å bar mbar atm a b eV meV μeV amu AU))
+            pi g L dL cL mL μL min h d deg ha t Å bar mbar atm a b eV meV μeV amu AU))
 
 (define-unit-system SI
   (length              meter     m)

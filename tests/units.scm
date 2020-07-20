@@ -43,4 +43,15 @@
   (test-error (< (* m -3) (* s 5)))
   (test-error (> (* kg 4) (* J 3))))
 
+(test-group "math-functions"
+  (test-equal 1           (sin (* deg 90)))
+  (test-equal (* m 2)     (abs (* m 2)))
+  (test-equal (* m 3)     (abs (* m -3)))
+  ;(test-equal 1           (sgn (* s 2)))
+  ;(test-equal 0           (sgn (* s 0)))
+  ;(test-equal -1          (sgn (* s -1)))
+  (test-equal (* 8 m m m) (expt (* m 2) 3))
+  (test-equal (* m 1)     (sqrt (* m m)))
+  (test-equal (/ pi 4)    (atan (* m 3) (* m 3))))
+
 (test-end)
