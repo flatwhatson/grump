@@ -1,7 +1,7 @@
 (define-module (grump units)
   #:use-module (oop goops)
   #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-71)
+  #:use-module (srfi srfi-11)
   #:export (compatible?
             convert-to)
   #:export-syntax (define-unit-system
@@ -386,10 +386,10 @@
     (if (null? lst)
         (values (reverse! firsts)
                 (reverse! seconds))
-        (let ((firsts seconds next
-               (if is-first
-                   (values (cons (car lst) firsts) seconds #f)
-                   (values firsts (cons (car lst) seconds) #t))))
+        (let-values (((firsts seconds next)
+                      (if is-first
+                          (values (cons (car lst) firsts) seconds #f)
+                          (values firsts (cons (car lst) seconds) #t))))
           (loop (cdr lst) firsts seconds next)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -445,7 +445,7 @@
   (lambda (x)
     (syntax-case x ()
       ((_ dim (dims-and-exps ...))
-       (let ((dims exps (deal2 #'(dims-and-exps ...))))
+       (let-values (((dims exps) (deal2 #'(dims-and-exps ...))))
          ;; TODO ensure unit-systems match
          #`(define-dimension*
              (unit-system #,(first dims))
@@ -490,7 +490,7 @@
   (lambda (x)
     (syntax-case x ()
       ((_ (units ...) (syms prefs facs) ...)
-       (let ((usyms unames (deal2 #'(units ...))))
+       (let-values (((usyms unames) (deal2 #'(units ...))))
          #`(begin
              #,@(map (lambda (usym uname)
                        #`(begin
