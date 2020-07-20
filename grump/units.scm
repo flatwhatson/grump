@@ -482,113 +482,136 @@
 (define-syntax define-unit-system
   (lambda (x)
     (syntax-case x ()
-      ((_ us (dims units syms) ...)
-       (let* ((dimensions   #'(dims  ...))
-              (unit-names   #'(units ...))
-              (unit-symbols #'(syms  ...))
-              (exponents    (lambda (dim)
-                              (map (lambda (d)
-                                     (if (eq? dim d) 1 0))
-                                   dimensions))))
+      ((_ unit-system (dimensions units symbols) ...)
+       (let* ((dimensions #'(dimensions ...))
+              (units      #'(units      ...))
+              (symbols    #'(symbols    ...))
+              (exponents (lambda (dim)
+                           (map (lambda (d)
+                                  (if (eq? dim d) 1 0))
+                                dimensions))))
          #`(begin
 
-             (define us
+             (define unit-system
                (make <unit-system>
-                 #:name              'us
+                 #:name              'unit-system
                  #:base-dimensions   '#,dimensions
-                 #:base-unit-names   '#,unit-names
-                 #:base-unit-symbols '#,unit-symbols))
+                 #:base-unit-names   '#,units
+                 #:base-unit-symbols '#,symbols))
 
-             #,(let ((exp (make-list (length dimensions) 0)))
-                 #`(make-dimension us '#,exp 'dimensionless))
+             #,(let ((exponents (make-list (length dimensions) 0)))
+                 #`(make-dimension unit-system '#,exponents 'dimensionless))
 
-             #,@(map (lambda (dim exp)
-                       #`(define-dimension* us #,dim '#,exp))
+             #,@(map (lambda (dimension exponents)
+                       #`(define-dimension* unit-system #,dimension '#,exponents))
                      dimensions (map exponents dimensions))
 
-             #,@(map (lambda (dim unit sym)
-                       #`(define-unit #,sym #,unit 1 #,dim))
-                     dimensions unit-names unit-symbols)
+             #,@(map (lambda (dimension unit symbol)
+                       #`(define-unit #,symbol #,unit 1 #,dimension))
+                     dimensions units symbols)
 
              ))))))
 
 (define-syntax define-dimension*
   (lambda (x)
     (syntax-case x ()
-      ((_ us dim exp)
-       (with-syntax
-           ((dim-p (datum->syntax #'dim (symbol-append
-                                         (syntax->datum #'dim)
-                                         '?))))
+      ((_ unit-system name exponents)
+       (with-syntax ((pred?
+                      (datum->syntax #'name (symbol-append
+                                             (syntax->datum #'name)
+                                             '?))))
          #`(begin
-             (define dim
-               (make-dimension us exp 'dim))
-             (define (dim-p q)
-               (compatible? dim (dimension q)))))))))
+             (define name
+               (make-dimension unit-system exponents 'name))
+             (define (pred? q)
+               (compatible? name (dimension q)))))))))
 
 (define-syntax define-dimension
   (lambda (x)
     (syntax-case x ()
-      ((_ dim (dims-and-exps ...))
-       (let-values (((dims exps) (deal2 #'(dims-and-exps ...))))
+      ((_ name (dims-and-exps ...))
+       (let-values (((dimensions exponents) (deal2 #'(dims-and-exps ...))))
          #`(begin
-             (assert-same-unit-systems #,@dims)
+             (assert-same-unit-systems #,@dimensions)
              (define-dimension*
-               (unit-system #,(first dims))
-               dim
+               (unit-system #,(first dimensions))
+               name
                (combine-exponents
-                (list #,@dims)
-                (list #,@exps))))))
-      ((_ dim unit sym (dims-and-exps ...))
+                (list #,@dimensions)
+                (list #,@exponents))))))
+      ((_ name unit symbol (dims-and-exps ...))
        #`(begin
-           (define-dimension dim (dims-and-exps ...))
-           (define-unit sym unit 1 dim))))))
+           (define-dimension name (dims-and-exps ...))
+           (define-unit symbol unit 1 name))))))
 
 (define-syntax define-dimensions
+  (syntax-rules ()
+    ((_ (dimension ...) ...)
+     (begin
+       (define-dimension dimension ...) ...))))
+
+(define-syntax define-unit*
   (lambda (x)
     (syntax-case x ()
-      ((_ (dims ...) ...)
-       #`(begin
-           #,@(map (lambda (dim)
-                     #`(define-dimension #,@dim))
-                   #'((dims ...) ...)))))))
+      ((_ symbol unit factory)
+       (with-syntax ((unit
+                       (datum->syntax x (syntax->datum #'unit))))
+         #'(begin
+             (define unit
+               factory)
+             (define-syntax symbol
+               (lambda (x)
+                 (syntax-case x ()
+                   (var
+                    (identifier? #'var)
+                    #'unit)
+                   ((var)
+                    #'unit)
+                   ((var amount)
+                    #'(make-quantity amount unit)))))))))))
 
 (define-syntax define-unit
-  (lambda (x)
-    (syntax-case x ()
-      ((_ sym unit fac dim)
-       #'(define sym
-           (make-unit fac dim 'unit 'sym)))
-      ((_ sym unit quant)
-       #'(define sym
-           (as-unit quant 'unit 'sym))))))
+  (syntax-rules ()
+    ((_ symbol unit factor dimension)
+     (define-unit* symbol unit
+       (make-unit factor dimension 'unit 'symbol)))
+    ((_ symbol unit quantity)
+     (define-unit* symbol unit
+       (as-unit quantity 'unit 'symbol)))))
 
 (define-syntax define-units
+  (syntax-rules ()
+    ((_ (unit ...) ...)
+     (begin
+       (define-unit unit ...) ...))))
+
+(define-syntax define-unit-prefix*
   (lambda (x)
     (syntax-case x ()
-      ((_ (units ...) ...)
-       #`(begin
-           #,@(map (lambda (unit)
-                     #`(define-unit #,@unit))
-                   #'((units ...) ...)))))))
+      ((_ symbol unit prefix name factor)
+       (with-syntax ((prefixed-symbol
+                      (datum->syntax #'symbol (symbol-append
+                                               (syntax->datum #'prefix)
+                                               (syntax->datum #'symbol))))
+                     (prefixed-unit
+                      (datum->syntax #'unit (symbol-append
+                                             (syntax->datum #'name)
+                                             (syntax->datum #'unit)))))
+         #'(define-unit prefixed-symbol prefixed-unit (* factor symbol)))))))
+
+(define-syntax define-unit-prefixes*
+  (syntax-rules ()
+    ((_ symbol unit (prefix name factor) ...)
+     (begin
+       (define-unit-prefix* symbol unit prefix name factor) ...))))
 
 (define-syntax define-prefixed-units
   (lambda (x)
     (syntax-case x ()
-      ((_ (units ...) (syms prefs facs) ...)
-       (let-values (((usyms unames) (deal2 #'(units ...))))
+      ((_ (symbol unit ...) (prefix name factor) ...)
+       (let-values (((symbols units) (deal2 #'(symbol unit ...))))
          #`(begin
-             #,@(map (lambda (usym uname)
-                       #`(begin
-                           #,@(map (lambda (psym pname fac)
-                                     (with-syntax ((sym
-                                                    (datum->syntax usym (symbol-append
-                                                                         (syntax->datum psym)
-                                                                         (syntax->datum usym))))
-                                                   (name
-                                                    (datum->syntax uname (symbol-append
-                                                                          (syntax->datum pname)
-                                                                          (syntax->datum uname)))))
-                                       #`(define-unit sym name (* #,fac #,usym))))
-                                   #'(syms ...) #'(prefs ...) #'(facs ...))))
-                     usyms unames)))))))
+             #,@(map (lambda (symbol unit)
+                       #`(define-unit-prefixes* #,symbol #,unit
+                           (prefix name factor) ...))
+                     symbols units)))))))

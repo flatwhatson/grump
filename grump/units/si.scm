@@ -2,99 +2,102 @@
   #:use-module (grump units)
   #:re-export (compatible?
                convert-to)
-  #:export (length                  length?                  m
-            mass                    mass?                    kg
-            time                    time?                    s
-            electric-current        electric-current?        A
-            temperature             temperature?             K
-            luminous-intensity      luminous-intensity?      cd
-            amount-of-substance     amount-of-substance?     mol
+  #:export-syntax (m kg s A K cd mol Hz N J W Pa rad sr C V F Ω S Wb T H lm lx Bq Gy Sv kat
+
+                   Ym   Zm   Em   Pm   Tm   Gm   Mm   km   hm   dam
+                   dm   cm   mm   μm   nm   pm   fm   am   zm   ym
+                   Ys   Zs   Es   Ps   Ts   Gs   Ms   ks   hs   das
+                   ds   cs   ms   μs   ns   ps   fs   as   zs   ys
+                   YA   ZA   EA   PA   TA   GA   MA   kA   hA   daA
+                   dA   cA   mA   μA   nA   pA   fA   aA   zA   yA
+                   YK   ZK   EK   PK   TK   GK   MK   kK   hK   daK
+                   dK   cK   mK   μK   nK   pK   fK   aK   zK   yK
+                   Ycd  Zcd  Ecd  Pcd  Tcd  Gcd  Mcd  kcd  hcd  dacd
+                   dcd  ccd  mcd  μcd  ncd  pcd  fcd  acd  zcd  ycd
+                   Ymol Zmol Emol Pmol Tmol Gmol Mmol kmol hmol damol
+                   dmol cmol mmol μmol nmol pmol fmol amol zmol ymol
+                   YHz  ZHz  EHz  PHz  THz  GHz  MHz  kHz  hHz  daHz
+                   dHz  cHz  mHz  μHz  nHz  pHz  fHz  aHz  zHz  yHz
+                   YN   ZN   EN   PN   TN   GN   MN   kN   hN   daN
+                   dN   cN   mN   μN   nN   pN   fN   aN   zN   yN
+                   YJ   ZJ   EJ   PJ   TJ   GJ   MJ   kJ   hJ   daJ
+                   dJ   cJ   mJ   μJ   nJ   pJ   fJ   aJ   zJ   yJ
+                   YW   ZW   EW   PW   TW   GW   MW   kW   hW   daW
+                   dW   cW   mW   μW   nW   pW   fW   aW   zW   yW
+                   YPa  ZPa  EPa  PPa  TPa  GPa  MPa  kPa  hPa  daPa
+                   dPa  cPa  mPa  μPa  nPa  pPa  fPa  aPa  zPa  yPa
+                   Yrad Zrad Erad Prad Trad Grad Mrad krad hrad darad
+                   drad crad mrad μrad nrad prad frad arad zrad yrad
+                   Ysr  Zsr  Esr  Psr  Tsr  Gsr  Msr  ksr  hsr  dasr
+                   dsr  csr  msr  μsr  nsr  psr  fsr  asr  zsr  ysr
+                   YC   ZC   EC   PC   TC   GC   MC   kC   hC   daC
+                   dC   cC   mC   μC   nC   pC   fC   aC   zC   yC
+                   YV   ZV   EV   PV   TV   GV   MV   kV   hV   daV
+                   dV   cV   mV   μV   nV   pV   fV   aV   zV   yV
+                   YF   ZF   EF   PF   TF   GF   MF   kF   hF   daF
+                   dF   cF   mF   μF   nF   pF   fF   aF   zF   yF
+                   YΩ   ZΩ   EΩ   PΩ   TΩ   GΩ   MΩ   kΩ   hΩ   daΩ
+                   dΩ   cΩ   mΩ   μΩ   nΩ   pΩ   fΩ   aΩ   zΩ   yΩ
+                   YS   ZS   ES   PS   TS   GS   MS   kS   hS   daS
+                   dS   cS   mS   μS   nS   pS   fS   aS   zS   yS
+                   YWb  ZWb  EWb  PWb  TWb  GWb  MWb  kWb  hWb  daWb
+                   dWb  cWb  mWb  μWb  nWb  pWb  fWb  aWb  zWb  yWb
+                   YT   ZT   ET   PT   TT   GT   MT   kT   hT   daT
+                   dT   cT   mT   μT   nT   pT   fT   aT   zT   yT
+                   YH   ZH   EH   PH   TH   GH   MH   kH   hH   daH
+                   dH   cH   mH   μH   nH   pH   fH   aH   zH   yH
+                   Ylm  Zlm  Elm  Plm  Tlm  Glm  Mlm  klm  hlm  dalm
+                   dlm  clm  mlm  μlm  nlm  plm  flm  alm  zlm  ylm
+                   Ylx  Zlx  Elx  Plx  Tlx  Glx  Mlx  klx  hlx  dalx
+                   dlx  clx  mlx  μlx  nlx  plx  flx  alx  zlx  ylx
+                   YBq  ZBq  EBq  PBq  TBq  GBq  MBq  kBq  hBq  daBq
+                   dBq  cBq  mBq  μBq  nBq  pBq  fBq  aBq  zBq  yBq
+                   YGy  ZGy  EGy  PGy  TGy  GGy  MGy  kGy  hGy  daGy
+                   dGy  cGy  mGy  μGy  nGy  pGy  fGy  aGy  zGy  yGy
+                   YSv  ZSv  ESv  PSv  TSv  GSv  MSv  kSv  hSv  daSv
+                   dSv  cSv  mSv  μSv  nSv  pSv  fSv  aSv  zSv  ySv
+                   Ykat Zkat Ekat Pkat Tkat Gkat Mkat kkat hkat dakat
+                   dkat ckat mkat μkat nkat pkat fkat akat zkat ykat
+
+                   g L dL cL mL μL min h d deg ha t Å bar mbar atm a b eV meV μeV amu AU)
+  #:export (length                  length?
+            mass                    mass?
+            time                    time?
+            electric-current        electric-current?
+            temperature             temperature?
+            luminous-intensity      luminous-intensity?
+            amount-of-substance     amount-of-substance?
 
             area                    area?
             volume                  volume?
-            frequency               frequency?               Hz
+            frequency               frequency?
             velocity                velocity?
             acceleration            acceleration?
-            force                   force?                   N
-            energy                  energy?                  J
-            power                   power?                   W
-            pressure                pressure?                Pa
+            force                   force?
+            energy                  energy?
+            power                   power?
+            pressure                pressure?
 
-            angle                   angle?                   rad
-            solid-angle             solid-angle?             sr
+            angle                   angle?
+            solid-angle             solid-angle?
 
-            electric-charge         electric-charge?         C
-            voltage                 voltage?                 V
-            capacitance             capacitance?             F
-            resistance              resistance?              Ω
-            conductance             conductance?             S
-            magnetic-flux           magnetic-flux?           Wb
-            magnetic-field-strength magnetic-field-strength? T
-            inductance              inductance?              H
+            electric-charge         electric-charge?
+            voltage                 voltage?
+            capacitance             capacitance?
+            resistance              resistance?
+            conductance             conductance?
+            magnetic-flux           magnetic-flux?
+            magnetic-field-strength magnetic-field-strength?
+            inductance              inductance?
 
-            luminous-flux           luminous-flux?           lm
-            illuminance             illuminance?             lx
-            radioactivity           radioactivity?           Bq
-            absorbed-dose           absorbed-dose?           Gy
-            equivalent-dose         equivalent-dose?         Sv
-            catalytic-activity      catalytic-activity?      kat
+            luminous-flux           luminous-flux?
+            illuminance             illuminance?
+            radioactivity           radioactivity?
+            absorbed-dose           absorbed-dose?
+            equivalent-dose         equivalent-dose?
+            catalytic-activity      catalytic-activity?
 
-            Ym   Zm   Em   Pm   Tm   Gm   Mm   km   hm   dam
-            dm   cm   mm   μm   nm   pm   fm   am   zm   ym
-            Ys   Zs   Es   Ps   Ts   Gs   Ms   ks   hs   das
-            ds   cs   ms   μs   ns   ps   fs   as   zs   ys
-            YA   ZA   EA   PA   TA   GA   MA   kA   hA   daA
-            dA   cA   mA   μA   nA   pA   fA   aA   zA   yA
-            YK   ZK   EK   PK   TK   GK   MK   kK   hK   daK
-            dK   cK   mK   μK   nK   pK   fK   aK   zK   yK
-            Ycd  Zcd  Ecd  Pcd  Tcd  Gcd  Mcd  kcd  hcd  dacd
-            dcd  ccd  mcd  μcd  ncd  pcd  fcd  acd  zcd  ycd
-            Ymol Zmol Emol Pmol Tmol Gmol Mmol kmol hmol damol
-            dmol cmol mmol μmol nmol pmol fmol amol zmol ymol
-            YHz  ZHz  EHz  PHz  THz  GHz  MHz  kHz  hHz  daHz
-            dHz  cHz  mHz  μHz  nHz  pHz  fHz  aHz  zHz  yHz
-            YN   ZN   EN   PN   TN   GN   MN   kN   hN   daN
-            dN   cN   mN   μN   nN   pN   fN   aN   zN   yN
-            YJ   ZJ   EJ   PJ   TJ   GJ   MJ   kJ   hJ   daJ
-            dJ   cJ   mJ   μJ   nJ   pJ   fJ   aJ   zJ   yJ
-            YW   ZW   EW   PW   TW   GW   MW   kW   hW   daW
-            dW   cW   mW   μW   nW   pW   fW   aW   zW   yW
-            YPa  ZPa  EPa  PPa  TPa  GPa  MPa  kPa  hPa  daPa
-            dPa  cPa  mPa  μPa  nPa  pPa  fPa  aPa  zPa  yPa
-            Yrad Zrad Erad Prad Trad Grad Mrad krad hrad darad
-            drad crad mrad μrad nrad prad frad arad zrad yrad
-            Ysr  Zsr  Esr  Psr  Tsr  Gsr  Msr  ksr  hsr  dasr
-            dsr  csr  msr  μsr  nsr  psr  fsr  asr  zsr  ysr
-            YC   ZC   EC   PC   TC   GC   MC   kC   hC   daC
-            dC   cC   mC   μC   nC   pC   fC   aC   zC   yC
-            YV   ZV   EV   PV   TV   GV   MV   kV   hV   daV
-            dV   cV   mV   μV   nV   pV   fV   aV   zV   yV
-            YF   ZF   EF   PF   TF   GF   MF   kF   hF   daF
-            dF   cF   mF   μF   nF   pF   fF   aF   zF   yF
-            YΩ   ZΩ   EΩ   PΩ   TΩ   GΩ   MΩ   kΩ   hΩ   daΩ
-            dΩ   cΩ   mΩ   μΩ   nΩ   pΩ   fΩ   aΩ   zΩ   yΩ
-            YS   ZS   ES   PS   TS   GS   MS   kS   hS   daS
-            dS   cS   mS   μS   nS   pS   fS   aS   zS   yS
-            YWb  ZWb  EWb  PWb  TWb  GWb  MWb  kWb  hWb  daWb
-            dWb  cWb  mWb  μWb  nWb  pWb  fWb  aWb  zWb  yWb
-            YT   ZT   ET   PT   TT   GT   MT   kT   hT   daT
-            dT   cT   mT   μT   nT   pT   fT   aT   zT   yT
-            YH   ZH   EH   PH   TH   GH   MH   kH   hH   daH
-            dH   cH   mH   μH   nH   pH   fH   aH   zH   yH
-            Ylm  Zlm  Elm  Plm  Tlm  Glm  Mlm  klm  hlm  dalm
-            dlm  clm  mlm  μlm  nlm  plm  flm  alm  zlm  ylm
-            Ylx  Zlx  Elx  Plx  Tlx  Glx  Mlx  klx  hlx  dalx
-            dlx  clx  mlx  μlx  nlx  plx  flx  alx  zlx  ylx
-            YBq  ZBq  EBq  PBq  TBq  GBq  MBq  kBq  hBq  daBq
-            dBq  cBq  mBq  μBq  nBq  pBq  fBq  aBq  zBq  yBq
-            YGy  ZGy  EGy  PGy  TGy  GGy  MGy  kGy  hGy  daGy
-            dGy  cGy  mGy  μGy  nGy  pGy  fGy  aGy  zGy  yGy
-            YSv  ZSv  ESv  PSv  TSv  GSv  MSv  kSv  hSv  daSv
-            dSv  cSv  mSv  μSv  nSv  pSv  fSv  aSv  zSv  ySv
-            Ykat Zkat Ekat Pkat Tkat Gkat Mkat kkat hkat dakat
-            dkat ckat mkat μkat nkat pkat fkat akat zkat ykat
-
-            pi g L dL cL mL μL min h d deg ha t Å bar mbar atm a b eV meV μeV amu AU))
+            pi))
 
 (define-unit-system SI
   (length              meter     m)
