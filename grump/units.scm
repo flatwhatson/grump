@@ -376,14 +376,21 @@
 
 (define (with-exponents names exponents)
   (string-join
-   (filter (negate string-null?)
-           (map (lambda (n e)
-                  (cond ((eqv? e 0) "")
-                        ((eqv? e 1) (symbol->string n))
-                        (else (string-append
-                               (symbol->string n)
-                               (number->string e)))))
-                names exponents))
+   (filter identity
+           (append
+            (map (lambda (n e)
+                   (cond ((= e 1) (symbol->string n))
+                         ((> e 1) (string-append
+                                   (symbol->string n)
+                                   (number->string e)))
+                         (else #f)))
+                 names exponents)
+            (map (lambda (n e)
+                   (cond ((< e 0) (string-append
+                                   (symbol->string n)
+                                   (number->string e)))
+                         (else #f)))
+                 names exponents)))
    "."))
 
 (define (base-dimensions-with-exponents d)
@@ -427,8 +434,9 @@
           (when (symbol u)
             (display (symbol u) p)
             (display #\= p))
-          (display (factor u) p)
-          (display #\. p)
+          (unless (= (factor u) 1)
+            (display (factor u) p)
+            (display #\. p))
           (display (base-units-with-exponents d) p)))
     (display #\> p)))
 
@@ -550,33 +558,13 @@
      (begin
        (define-dimension dimension ...) ...))))
 
-(define-syntax define-unit*
-  (lambda (x)
-    (syntax-case x ()
-      ((_ symbol unit factory)
-       (with-syntax ((unit
-                       (datum->syntax x (syntax->datum #'unit))))
-         #'(begin
-             (define unit
-               factory)
-             (define-syntax symbol
-               (lambda (x)
-                 (syntax-case x ()
-                   (var
-                    (identifier? #'var)
-                    #'unit)
-                   ((var)
-                    #'unit)
-                   ((var amount)
-                    #'(make-quantity amount unit)))))))))))
-
 (define-syntax define-unit
   (syntax-rules ()
     ((_ symbol unit factor dimension)
-     (define-unit* symbol unit
+     (define symbol
        (make-unit factor dimension 'unit 'symbol)))
     ((_ symbol unit quantity)
-     (define-unit* symbol unit
+     (define symbol
        (as-unit quantity 'unit 'symbol)))))
 
 (define-syntax define-units
