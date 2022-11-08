@@ -1,10 +1,10 @@
 #!/usr/bin/env -S guile -e main -s
 !#
-(add-to-load-path (dirname (current-filename)))
+(add-to-load-path (dirname (dirname (current-filename))))
 (use-modules (ice-9 getopt-long)
              (ice-9 pretty-print)
              (ice-9 textual-ports)
-             (grump bencode)
+             (grump parse tcpflow)
              (grump utils))
 
 (define (print-help args)
@@ -15,8 +15,8 @@ options:
   -h, --help       Display this help
   -d, --debug      Print debug logs to stderr
 
-Parse bencoded data from input (default stdin) and write the parsed
-s-exp to output (default stdout).
+Parse the output of \"tcpflow -D\" from input (default stdin) and
+write the parsed s-exp to output (default stdout).
 ")))
 
 (define (main args)
@@ -42,11 +42,10 @@ s-exp to output (default stdout).
                                   (current-output-port)
                                   (open-output-file output-file)))
                  (input-text
-                  (time! "Read input bytes"
-                         (set-port-encoding! input-port "ISO-8859-1")
+                  (time! "Read input text"
                          (get-string-all input-port)))
                  (parsed-data
-                  (time! "Parse bencoded data"
-                         (parse-bencode input-text))))
+                  (time! "Parse tcpflow data"
+                         (parse-tcpflow input-text))))
             (time! "Pretty-print parsed data"
                    (pretty-print parsed-data output-port)))))))

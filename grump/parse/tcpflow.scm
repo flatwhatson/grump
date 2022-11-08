@@ -1,4 +1,4 @@
-(define-module (grump tcpflow)
+(define-module (grump parse tcpflow)
   #:use-module (grump utils)
   #:use-module (ice-9 peg))
 

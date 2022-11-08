@@ -1,4 +1,4 @@
-(define-module (grump bencode)
+(define-module (grump parse bencode)
   #:use-module (grump utils)
   #:use-module (ice-9 peg)
   #:use-module (srfi srfi-2))
